@@ -23,8 +23,8 @@ def fetch_metrics(symbol: str):
         print(f"Error fetching metrics for {symbol}: {e}")
         return {}
 
-def get_undervalued_stocks(symbols: list[str]):
-    undervalued = []
+def get_stocks(symbols: list[str]):
+    stocks = []
 
     for symbol in symbols:
         quote = fetch_quote(symbol)
@@ -32,14 +32,50 @@ def get_undervalued_stocks(symbols: list[str]):
 
         pe = metrics.get("metric", {}).get("peBasicExclExtraTTM")
         pb = metrics.get("metric", {}).get("pbAnnual")
+        revenue_growth = metrics.get("metric", {}).get("revenueGrowthTTMYoy")
         price = quote.get("c")
 
-        if pe and pb and pe < 100 and pb < 60:
-            undervalued.append({
-                "symbol": symbol,
-                "price": price,
-                "pe_ratio": pe,
-                "pb_ratio": pb
-            })
+        stocks.append({
+            "symbol": symbol,
+            "price": price,
+            "pe_ratio": pe,
+            "pb_ratio": pb,
+            "revenue_growth": revenue_growth
+        })
 
-    return undervalued
+    return stocks
+
+# def get_undervalued_stocks(symbols: list[str]):
+#     undervalued = []
+
+#     for symbol in symbols:
+#         quote = fetch_quote(symbol)
+#         metrics = fetch_metrics(symbol)
+
+#         m = metrics.get("metric", {})
+#         pe = m.get("peBasicExclExtraTTM")
+#         pb = m.get("pbAnnual")
+#         roe = m.get("roeAnnual")
+#         debt_equity = m.get("totalDebt/totalEquityAnnual")
+#         price = quote.get("c")
+
+#         if not all([pe, pb, roe, debt_equity, price]):
+#             continue
+
+#         if pe < 15 and pb < 1 and roe > 10 and debt_equity < 0.5:
+#             score = (roe / pe) + (1 - debt_equity)  # Custom value formula
+
+#             undervalued.append({
+#                 "symbol": symbol,
+#                 "price": price,
+#                 "pe_ratio": pe,
+#                 "pb_ratio": pb,
+#                 "roe": roe,
+#                 "de_ratio": debt_equity,
+#                 "score": round(score, 2)
+#             })
+
+#     # Optionally sort by score
+#     undervalued.sort(key=lambda x: x["score"], reverse=True)
+
+#     return undervalued
