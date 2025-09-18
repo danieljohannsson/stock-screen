@@ -21,6 +21,6 @@ app.include_router(stocks.router)
 @app.on_event("startup")
 def start_scheduler():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(get_stocks, "interval", minutes=1) # every minute
+    scheduler.add_job(get_stocks, "interval", minutes=0.5) # every 30 seconds
     scheduler.start()
     print("⏰ Scheduler started!")
