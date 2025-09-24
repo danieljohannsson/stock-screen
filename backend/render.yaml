@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: stock-rec-backend
+    env: python
+    plan: free # free tier, you can change to 'starter' or higher later
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
