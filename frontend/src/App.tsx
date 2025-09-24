@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
 import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from "react-router-dom";
+import {
   Table,
   TableBody,
   TableCell,
@@ -11,24 +17,31 @@ import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
   BarChart3,
-  Target,
   Building2,
   ArrowUpDown,
+  DollarSign,
 } from "lucide-react";
+import CompanyProfile from "./components/CompanyProfile";
 
 interface Stock {
   symbol: string;
+  name: string;
   price: number;
   pe_ratio: number;
   ps_ratio: number;
+  pb_ratio: number;
   peg_ratio: number;
+  dividend_yield?: number;
   revenue_growth: number;
   earnings_growth: number;
   de_ratio: number;
+  roe?: number;
+  free_cash_flow?: number;
   average_analyst_rating?: string;
   summary?: string;
+  industry?: string;
+  website?: string;
   balanced_score: number;
   value_score: number;
   growth_score: number;
@@ -39,13 +52,14 @@ interface Stock {
 type SortField = keyof Stock;
 type SortDirection = "asc" | "desc";
 
-function App() {
+function StockScreener() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sortField, setSortField] = useState<SortField>("balanced_score");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedStrategy, setSelectedStrategy] = useState("balanced");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -113,6 +127,310 @@ function App() {
     if (rating.includes("Sell"))
       return "bg-red-100 text-red-800 border-red-200";
     return "bg-gray-100 text-gray-800 border-gray-200";
+  };
+
+  const getColumnsForStrategy = (strategy: string) => {
+    const baseColumns = [
+      {
+        key: "score",
+        label: "Score",
+        icon: <ArrowUpDown className="h-4 w-4" />,
+      },
+      {
+        key: "symbol",
+        label: "Symbol",
+        icon: <ArrowUpDown className="h-4 w-4" />,
+      },
+      {
+        key: "name",
+        label: "Company",
+        icon: <ArrowUpDown className="h-4 w-4" />,
+      },
+    ];
+
+    switch (strategy) {
+      case "growth":
+        return [
+          ...baseColumns,
+          {
+            key: "peg_ratio",
+            label: "PEG Ratio",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "revenue_growth",
+            label: "Revenue Growth (yoy)",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "de_ratio",
+            label: "D/E Ratio",
+            icon: <Building2 className="h-4 w-4" />,
+          },
+          {
+            key: "average_analyst_rating",
+            label: "Analyst Rating",
+            icon: null,
+          },
+        ];
+      case "value":
+        return [
+          ...baseColumns,
+          {
+            key: "revenue_growth",
+            label: "Revenue Growth (yoy)",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "earnings_growth",
+            label: "Earnings Growth (yoy)",
+            icon: <TrendingDown className="h-4 w-4" />,
+          },
+          {
+            key: "roe",
+            label: "ROE",
+            icon: <BarChart3 className="h-4 w-4" />,
+          },
+          {
+            key: "de_ratio",
+            label: "D/E Ratio",
+            icon: <Building2 className="h-4 w-4" />,
+          },
+          {
+            key: "free_cash_flow",
+            label: "Free Cash Flow",
+            icon: <DollarSign className="h-4 w-4" />,
+          },
+          {
+            key: "peg_ratio",
+            label: "PEG Ratio",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "average_analyst_rating",
+            label: "Analyst Rating",
+            icon: null,
+          },
+        ];
+      case "momentum":
+        return [
+          ...baseColumns,
+          {
+            key: "earnings_growth",
+            label: "Earnings Growth (yoy)",
+            icon: <TrendingDown className="h-4 w-4" />,
+          },
+          {
+            key: "revenue_growth",
+            label: "Revenue Growth (yoy)",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "roe",
+            label: "ROE",
+            icon: <BarChart3 className="h-4 w-4" />,
+          },
+          {
+            key: "average_analyst_rating",
+            label: "Analyst Rating",
+            icon: null,
+          },
+        ];
+      case "quality":
+        return [
+          ...baseColumns,
+          {
+            key: "pb_ratio",
+            label: "P/B Ratio",
+            icon: <BarChart3 className="h-4 w-4" />,
+          },
+          {
+            key: "roe",
+            label: "ROE",
+            icon: <BarChart3 className="h-4 w-4" />,
+          },
+          {
+            key: "de_ratio",
+            label: "D/E Ratio",
+            icon: <Building2 className="h-4 w-4" />,
+          },
+          {
+            key: "free_cash_flow",
+            label: "Free Cash Flow",
+            icon: <DollarSign className="h-4 w-4" />,
+          },
+          {
+            key: "dividend_yield",
+            label: "Dividend Yield",
+            icon: <DollarSign className="h-4 w-4" />,
+          },
+          {
+            key: "revenue_growth",
+            label: "Revenue Growth (yoy)",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "average_analyst_rating",
+            label: "Analyst Rating",
+            icon: null,
+          },
+        ];
+      default: // balanced
+        return [
+          ...baseColumns,
+          {
+            key: "revenue_growth",
+            label: "Revenue Growth (yoy)",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "earnings_growth",
+            label: "Earnings Growth (yoy)",
+            icon: <TrendingDown className="h-4 w-4" />,
+          },
+          {
+            key: "roe",
+            label: "ROE",
+            icon: <BarChart3 className="h-4 w-4" />,
+          },
+          {
+            key: "de_ratio",
+            label: "D/E Ratio",
+            icon: <Building2 className="h-4 w-4" />,
+          },
+          {
+            key: "free_cash_flow",
+            label: "Free Cash Flow",
+            icon: <DollarSign className="h-4 w-4" />,
+          },
+          {
+            key: "peg_ratio",
+            label: "PEG Ratio",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "average_analyst_rating",
+            label: "Analyst Rating",
+            icon: null,
+          },
+        ];
+    }
+  };
+
+  const renderCellContent = (stock: Stock, columnKey: string) => {
+    switch (columnKey) {
+      case "score":
+        return (
+          <Badge
+            variant="outline"
+            className={`text-sm font-bold ${
+              (stock[`${selectedStrategy}_score` as keyof Stock] as number) >=
+              80
+                ? "bg-green-100 text-green-800 border-green-200"
+                : (stock[
+                    `${selectedStrategy}_score` as keyof Stock
+                  ] as number) >= 60
+                ? "bg-blue-100 text-blue-800 border-blue-200"
+                : (stock[
+                    `${selectedStrategy}_score` as keyof Stock
+                  ] as number) >= 40
+                ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                : "bg-red-100 text-red-800 border-red-200"
+            }`}
+          >
+            {stock[`${selectedStrategy}_score` as keyof Stock] || 0}
+          </Badge>
+        );
+      case "symbol":
+        return <span className="font-medium">{stock.symbol}</span>;
+      case "name":
+        return (
+          <span className="text-muted-foreground">{stock.name || "--"}</span>
+        );
+      case "pe_ratio":
+        return stock.pe_ratio ? stock.pe_ratio.toFixed(2) : "--";
+      case "ps_ratio":
+        return stock.ps_ratio ? stock.ps_ratio.toFixed(2) : "--";
+      case "peg_ratio":
+        return stock.peg_ratio ? stock.peg_ratio.toFixed(2) : "--";
+      case "revenue_growth":
+        return (
+          <span
+            className={`font-semibold ${
+              stock.revenue_growth > 0
+                ? "text-green-600"
+                : stock.revenue_growth < 0
+                ? "text-red-600"
+                : "text-black"
+            }`}
+          >
+            {stock.revenue_growth
+              ? (stock.revenue_growth * 100).toFixed(1) + "%"
+              : "--"}
+          </span>
+        );
+      case "earnings_growth":
+        return (
+          <span
+            className={`font-semibold ${
+              stock.earnings_growth > 0
+                ? "text-green-600"
+                : stock.earnings_growth < 0
+                ? "text-red-600"
+                : "text-black"
+            }`}
+          >
+            {stock.earnings_growth
+              ? (stock.earnings_growth * 100).toFixed(1) + "%"
+              : "--"}
+          </span>
+        );
+      case "de_ratio":
+        return stock.de_ratio?.toFixed(2) ? stock.de_ratio.toFixed(2) : "--";
+      case "roe":
+        return stock.roe ? (stock.roe * 100).toFixed(1) + "%" : "--";
+      case "free_cash_flow":
+        return stock.free_cash_flow ? (
+          <span
+            className={`font-semibold ${
+              stock.free_cash_flow > 0
+                ? "text-green-600"
+                : stock.free_cash_flow < 0
+                ? "text-red-600"
+                : "text-black"
+            }`}
+          >
+            ${(stock.free_cash_flow / 1000000000).toFixed(1)}B
+          </span>
+        ) : (
+          "--"
+        );
+      case "dividend_yield":
+        return stock.dividend_yield ? (
+          <span className="font-semibold">
+            {stock.dividend_yield.toFixed(2)}%
+          </span>
+        ) : (
+          "--"
+        );
+      case "pb_ratio":
+        return stock.pb_ratio ? stock.pb_ratio.toFixed(2) : "--";
+      case "average_analyst_rating":
+        return stock.average_analyst_rating ? (
+          <Badge
+            variant="outline"
+            className={`${getRatingColor(stock.average_analyst_rating)}`}
+          >
+            {stock.average_analyst_rating}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-sm">
+            N/A
+          </Badge>
+        );
+      default:
+        return "--";
+    }
   };
 
   return (
@@ -258,190 +576,41 @@ function App() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() =>
-                    handleSort(`${selectedStrategy}_score` as SortField)
-                  }
-                >
-                  <div className="flex items-center gap-2">
-                    Score
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort("symbol")}
-                >
-                  <div className="flex items-center gap-2">
-                    Symbol
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort("price")}
-                >
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    Price
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort("pe_ratio")}
-                >
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    P/E Ratio
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort("ps_ratio")}
-                >
-                  <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    P/S Ratio
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort("peg_ratio")}
-                >
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    PEG Ratio
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort("revenue_growth")}
-                >
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Revenue Growth
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort("earnings_growth")}
-                >
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="h-4 w-4" />
-                    Earnings Growth
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort("de_ratio")}
-                >
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    D/E Ratio
-                    <ArrowUpDown className="h-4 w-4" />
-                  </div>
-                </TableHead>
-                <TableHead>Analyst Rating</TableHead>
+                {getColumnsForStrategy(selectedStrategy).map((column) => (
+                  <TableHead
+                    key={column.key}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      if (column.key === "score") {
+                        handleSort(`${selectedStrategy}_score` as SortField);
+                      } else {
+                        handleSort(column.key as SortField);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {column.icon}
+                      {column.label}
+                      {column.key !== "average_analyst_rating" && (
+                        <ArrowUpDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedStocks.map((stock) => (
-                <TableRow key={stock.symbol} className="hover:bg-muted/50">
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={`text-sm font-bold ${
-                        (stock[
-                          `${selectedStrategy}_score` as keyof Stock
-                        ] as number) >= 80
-                          ? "bg-green-100 text-green-800 border-green-200"
-                          : (stock[
-                              `${selectedStrategy}_score` as keyof Stock
-                            ] as number) >= 60
-                          ? "bg-blue-100 text-blue-800 border-blue-200"
-                          : (stock[
-                              `${selectedStrategy}_score` as keyof Stock
-                            ] as number) >= 40
-                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
-                          : "bg-red-100 text-red-800 border-red-200"
-                      }`}
-                    >
-                      {stock[`${selectedStrategy}_score` as keyof Stock] || 0}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">{stock.symbol}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-sm">
-                      ${stock.price?.toFixed(2)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {stock.pe_ratio ? stock.pe_ratio?.toFixed(2) : "--"}
-                  </TableCell>
-                  <TableCell>
-                    {stock.ps_ratio ? stock.ps_ratio?.toFixed(2) : "--"}
-                  </TableCell>
-                  <TableCell>
-                    {stock.peg_ratio ? stock.peg_ratio?.toFixed(2) : "--"}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`font-semibold ${
-                        stock.revenue_growth > 0
-                          ? "text-green-600"
-                          : stock.revenue_growth < 0
-                          ? "text-red-600"
-                          : "text-black"
-                      }`}
-                    >
-                      {stock.revenue_growth
-                        ? (stock.revenue_growth * 100).toFixed(1) + "%"
-                        : "--"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`font-semibold ${
-                        stock.earnings_growth > 0
-                          ? "text-green-600"
-                          : stock.earnings_growth < 0
-                          ? "text-red-600"
-                          : "text-black"
-                      }`}
-                    >
-                      {stock.earnings_growth
-                        ? (stock.earnings_growth * 100).toFixed(1) + "%"
-                        : "--"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {stock.de_ratio?.toFixed(2)
-                      ? stock.de_ratio?.toFixed(2)
-                      : "--"}
-                  </TableCell>
-                  <TableCell>
-                    {stock.average_analyst_rating ? (
-                      <Badge
-                        variant="outline"
-                        className={`${getRatingColor(
-                          stock.average_analyst_rating
-                        )}`}
-                      >
-                        {stock.average_analyst_rating}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-sm">
-                        N/A
-                      </Badge>
-                    )}
-                  </TableCell>
+                <TableRow
+                  key={stock.symbol}
+                  className="hover:bg-muted/50 cursor-pointer"
+                  onClick={() => navigate(`/company/${stock.symbol}`)}
+                >
+                  {getColumnsForStrategy(selectedStrategy).map((column) => (
+                    <TableCell key={column.key}>
+                      {renderCellContent(stock, column.key)}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>
@@ -449,6 +618,17 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<StockScreener />} />
+        <Route path="/company/:symbol" element={<CompanyProfile />} />
+      </Routes>
+    </Router>
   );
 }
 
