@@ -66,7 +66,10 @@ function StockScreener() {
       setLoading(true);
       try {
         const res = await fetch(
-          `http://localhost:8000/stocks?limit=100&strategy=${selectedStrategy}`
+          `${
+            import.meta.env.VITE_BACKEND_PRODUCTION_URL ||
+            "http://localhost:8000"
+          }/stocks?limit=100&strategy=${selectedStrategy}`
         );
         const data = await res.json();
         console.log(data);
