@@ -4,7 +4,9 @@ services:
     env: python
     plan: free # free tier, you can change to 'starter' or higher later
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m app.main
+    startCommand: python main.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.4
+      - key: ENVIRONMENT
+        value: production
