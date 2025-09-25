@@ -16,7 +16,7 @@ def get_allowed_origins():
         "http://localhost:5173",  # Local development
         "http://localhost:3000",  # Alternative local port
         "http://localhost:4173",
-        "https://*.render.com",   # Render deployments
+        "https://stock-rec.netlify.app",
     ]
     
     # Add localhost variations for development
