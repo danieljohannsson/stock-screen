@@ -15,7 +15,7 @@ def get_allowed_origins():
     origins = [
         "http://localhost:5173",  # Local development
         "http://localhost:3000",  # Alternative local port
-        "https://*.vercel.app",   # Vercel deployments
+        "http://localhost:4173",
         "https://*.render.com",   # Render deployments
     ]
     
