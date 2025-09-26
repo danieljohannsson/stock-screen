@@ -27,6 +27,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import CompanyProfile from "./components/CompanyProfile";
+import HealthIndicator from "./components/HealthIndicator";
 
 interface Stock {
   symbol: string;
@@ -465,11 +466,14 @@ function StockScreener() {
                 Discover undervalued stocks with comprehensive financial metrics
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-muted-foreground">
-                {stocks.length} stocks
-              </span>
+            <div className="flex items-center gap-4">
+              <HealthIndicator showDetails={true} />
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                <span className="text-xs text-muted-foreground">
+                  {stocks.length} stocks
+                </span>
+              </div>
             </div>
           </div>
         </div>

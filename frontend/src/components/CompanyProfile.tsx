@@ -8,6 +8,7 @@ import {
   Globe,
   BarChart3,
 } from "lucide-react";
+import HealthIndicator from "./HealthIndicator";
 
 interface Stock {
   symbol: string;
@@ -66,14 +67,17 @@ function CompanyProfile({ stock }: CompanyProfileProps) {
 
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                {stock.symbol}
-                {stock.name && (
-                  <span className="text-xl font-normal text-muted-foreground ml-3">
-                    - {stock.name}
-                  </span>
-                )}
-              </h1>
+              <div className="flex items-center gap-4 mb-2">
+                <h1 className="text-3xl font-bold text-foreground">
+                  {stock.symbol}
+                  {stock.name && (
+                    <span className="text-xl font-normal text-muted-foreground ml-3">
+                      - {stock.name}
+                    </span>
+                  )}
+                </h1>
+                <HealthIndicator />
+              </div>
               <div className="flex items-center gap-4 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
