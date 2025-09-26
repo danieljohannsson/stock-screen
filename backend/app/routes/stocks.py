@@ -11,7 +11,7 @@ router = APIRouter()
 def root():
     return {"message": "Welcome to Stock Rec API"}
 
-@router.get("/health")
+@router.api_route("/health", methods=["GET", "HEAD"])
 def health_check():
     global last_ping_time
     last_ping_time = datetime.utcnow()
