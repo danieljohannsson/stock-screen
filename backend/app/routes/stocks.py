@@ -1,11 +1,25 @@
 # app/routes/stocks.py
 import json
+from datetime import datetime
 from fastapi import APIRouter, Query
 from typing import Optional
 from app.services.stock_fetcher import get_stocks, calculate_stock_score
 
 router = APIRouter()
 
+@router.get("/")
+def root():
+    return {"message": "Welcome to Stock Rec API"}
+
+@router.get("/health")
+def health_check():
+    global last_ping_time
+    last_ping_time = datetime.utcnow()
+    print(f"✅ Health check ping at {last_ping_time} UTC")
+    return {
+        "status": "ok",
+        "last_ping": last_ping_time.isoformat()
+    }
 
 @router.get("/stocks")
 def get_all_stocks(limit: int = 100, strategy: str = "balanced"):
