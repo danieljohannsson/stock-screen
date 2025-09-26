@@ -58,6 +58,341 @@ interface Stock {
 type SortField = keyof Stock;
 type SortDirection = "asc" | "desc";
 
+function getStrategyCriteria(strategy: string) {
+  const criteriaData = {
+    balanced: {
+      description:
+        "Equal weight approach considering all investment factors for comprehensive evaluation.",
+      color: "blue",
+      metrics: [
+        {
+          name: "Revenue Growth",
+          maxPoints: 14,
+          thresholds:
+            "≥15%: 14pts | ≥10%: 12pts | ≥5%: 10pts | ≥2%: 8pts | ≥0%: 6pts | <0%: 0pts",
+        },
+        {
+          name: "Earnings Growth",
+          maxPoints: 14,
+          thresholds:
+            "≥20%: 14pts | ≥15%: 12pts | ≥10%: 10pts | ≥5%: 8pts | ≥0%: 6pts | <0%: 0pts",
+        },
+        {
+          name: "ROE",
+          maxPoints: 14,
+          thresholds:
+            "≥20%: 14pts | ≥15%: 12pts | ≥10%: 10pts | ≥5%: 8pts | ≥0%: 6pts | <0%: 0pts",
+        },
+        {
+          name: "D/E Ratio",
+          maxPoints: 14,
+          thresholds:
+            "≤0.3: 14pts | ≤0.5: 12pts | ≤0.7: 10pts | ≤1.0: 8pts | ≤1.5: 6pts | >1.5: 0pts",
+        },
+        {
+          name: "Free Cash Flow",
+          maxPoints: 14,
+          thresholds:
+            ">$10B: 14pts | >$5B: 12pts | >$1B: 10pts | >$500M: 8pts | >$0: 6pts | ≤$0: 0pts",
+        },
+        {
+          name: "PEG Ratio",
+          maxPoints: 14,
+          thresholds:
+            "≤0.5: 14pts | ≤0.8: 12pts | ≤1.0: 10pts | ≤1.2: 8pts | ≤1.5: 6pts | >1.5: 0pts",
+        },
+        {
+          name: "P/E Ratio",
+          maxPoints: 8,
+          thresholds:
+            "≤10: 8pts | ≤15: 6pts | ≤20: 4pts | ≤25: 2pts | >25: 0pts",
+        },
+        {
+          name: "Analyst Rating",
+          maxPoints: 8,
+          thresholds:
+            "Strong Buy: 8pts | Buy: 6pts | Hold: 4pts | Sell: 2pts | Strong Sell: 0pts",
+        },
+      ],
+    },
+    value: {
+      description:
+        "Focus on undervalued stocks with strong fundamentals and reasonable valuations.",
+      color: "green",
+      metrics: [
+        {
+          name: "Revenue Growth",
+          maxPoints: 12,
+          thresholds:
+            "≥15%: 12pts | ≥10%: 10pts | ≥5%: 8pts | ≥2%: 6pts | ≥0%: 4pts | <0%: 0pts",
+        },
+        {
+          name: "Earnings Growth",
+          maxPoints: 12,
+          thresholds:
+            "≥20%: 12pts | ≥15%: 10pts | ≥10%: 8pts | ≥5%: 6pts | ≥0%: 4pts | <0%: 0pts",
+        },
+        {
+          name: "ROE",
+          maxPoints: 15,
+          thresholds:
+            "≥20%: 15pts | ≥15%: 12pts | ≥10%: 10pts | ≥5%: 8pts | ≥0%: 6pts | <0%: 0pts",
+        },
+        {
+          name: "D/E Ratio",
+          maxPoints: 12,
+          thresholds:
+            "≤0.3: 12pts | ≤0.5: 10pts | ≤0.7: 8pts | ≤1.0: 6pts | ≤1.5: 4pts | >1.5: 0pts",
+        },
+        {
+          name: "Free Cash Flow",
+          maxPoints: 15,
+          thresholds:
+            ">$10B: 15pts | >$5B: 12pts | >$1B: 10pts | >$500M: 8pts | >$0: 6pts | ≤$0: 0pts",
+        },
+        {
+          name: "PEG Ratio",
+          maxPoints: 12,
+          thresholds:
+            "≤0.5: 12pts | ≤0.8: 10pts | ≤1.0: 8pts | ≤1.2: 6pts | ≤1.5: 4pts | >1.5: 0pts",
+        },
+        {
+          name: "P/E Ratio",
+          maxPoints: 10,
+          thresholds:
+            "≤10: 10pts | ≤15: 8pts | ≤20: 6pts | ≤25: 4pts | ≤30: 2pts | >30: 0pts",
+        },
+        {
+          name: "Analyst Rating",
+          maxPoints: 12,
+          thresholds:
+            "Strong Buy: 12pts | Buy: 10pts | Hold: 6pts | Sell: 3pts | Strong Sell: 0pts",
+        },
+      ],
+    },
+    growth: {
+      description:
+        "Target high-growth companies with strong expansion potential and reasonable valuations.",
+      color: "purple",
+      metrics: [
+        {
+          name: "PEG Ratio",
+          maxPoints: 20,
+          thresholds:
+            "≤0.5: 20pts | ≤0.8: 16pts | ≤1.0: 12pts | ≤1.2: 8pts | ≤1.5: 4pts | >1.5: 0pts",
+        },
+        {
+          name: "Revenue Growth",
+          maxPoints: 20,
+          thresholds:
+            "≥25%: 20pts | ≥20%: 16pts | ≥15%: 12pts | ≥10%: 8pts | ≥5%: 4pts | <5%: 0pts",
+        },
+        {
+          name: "D/E Ratio",
+          maxPoints: 15,
+          thresholds:
+            "≤0.3: 15pts | ≤0.5: 12pts | ≤0.7: 9pts | ≤1.0: 6pts | ≤1.5: 3pts | >1.5: 0pts",
+        },
+        {
+          name: "Analyst Rating",
+          maxPoints: 15,
+          thresholds:
+            "Strong Buy: 15pts | Buy: 12pts | Hold: 6pts | Sell: 3pts | Strong Sell: 0pts",
+        },
+        {
+          name: "P/E Ratio",
+          maxPoints: 10,
+          thresholds:
+            "≤15: 10pts | ≤20: 8pts | ≤25: 6pts | ≤30: 4pts | ≤40: 2pts | >40: 0pts",
+        },
+        {
+          name: "ROE",
+          maxPoints: 10,
+          thresholds:
+            "≥20%: 10pts | ≥15%: 8pts | ≥10%: 6pts | ≥5%: 4pts | ≥0%: 2pts | <0%: 0pts",
+        },
+        {
+          name: "Free Cash Flow",
+          maxPoints: 10,
+          thresholds:
+            ">$5B: 10pts | >$1B: 8pts | >$500M: 6pts | >$100M: 4pts | >$0: 2pts | ≤$0: 0pts",
+        },
+      ],
+    },
+    momentum: {
+      description:
+        "Identify stocks with strong recent performance and positive momentum indicators.",
+      color: "orange",
+      metrics: [
+        {
+          name: "Earnings Growth",
+          maxPoints: 25,
+          thresholds:
+            "≥30%: 25pts | ≥25%: 20pts | ≥20%: 15pts | ≥15%: 10pts | ≥10%: 5pts | <10%: 0pts",
+        },
+        {
+          name: "Revenue Growth",
+          maxPoints: 25,
+          thresholds:
+            "≥30%: 25pts | ≥25%: 20pts | ≥20%: 15pts | ≥15%: 10pts | ≥10%: 5pts | <10%: 0pts",
+        },
+        {
+          name: "ROE",
+          maxPoints: 20,
+          thresholds:
+            "≥25%: 20pts | ≥20%: 16pts | ≥15%: 12pts | ≥10%: 8pts | ≥5%: 4pts | <5%: 0pts",
+        },
+        {
+          name: "Analyst Rating",
+          maxPoints: 15,
+          thresholds:
+            "Strong Buy: 15pts | Buy: 12pts | Hold: 6pts | Sell: 3pts | Strong Sell: 0pts",
+        },
+        {
+          name: "P/E Ratio",
+          maxPoints: 10,
+          thresholds:
+            "≤15: 10pts | ≤20: 8pts | ≤25: 6pts | ≤30: 4pts | ≤40: 2pts | >40: 0pts",
+        },
+        {
+          name: "Free Cash Flow",
+          maxPoints: 5,
+          thresholds:
+            ">$1B: 5pts | >$500M: 4pts | >$100M: 3pts | >$0: 2pts | ≤$0: 0pts",
+        },
+      ],
+    },
+    quality: {
+      description:
+        "Focus on financially strong companies with excellent fundamentals and stability.",
+      color: "indigo",
+      metrics: [
+        {
+          name: "P/B Ratio",
+          maxPoints: 15,
+          thresholds:
+            "≤1.0: 15pts | ≤1.5: 12pts | ≤2.0: 9pts | ≤2.5: 6pts | ≤3.0: 3pts | >3.0: 0pts",
+        },
+        {
+          name: "ROE",
+          maxPoints: 20,
+          thresholds:
+            "≥25%: 20pts | ≥20%: 16pts | ≥15%: 12pts | ≥10%: 8pts | ≥5%: 4pts | <5%: 0pts",
+        },
+        {
+          name: "D/E Ratio",
+          maxPoints: 15,
+          thresholds:
+            "≤0.2: 15pts | ≤0.3: 12pts | ≤0.5: 9pts | ≤0.7: 6pts | ≤1.0: 3pts | >1.0: 0pts",
+        },
+        {
+          name: "Free Cash Flow",
+          maxPoints: 15,
+          thresholds:
+            ">$10B: 15pts | >$5B: 12pts | >$1B: 9pts | >$500M: 6pts | >$0: 3pts | ≤$0: 0pts",
+        },
+        {
+          name: "Dividend Yield",
+          maxPoints: 10,
+          thresholds:
+            "≥4%: 10pts | ≥3%: 8pts | ≥2%: 6pts | ≥1%: 4pts | ≥0.5%: 2pts | <0.5%: 0pts",
+        },
+        {
+          name: "Revenue Growth",
+          maxPoints: 10,
+          thresholds:
+            "≥10%: 10pts | ≥7%: 8pts | ≥5%: 6pts | ≥2%: 4pts | ≥0%: 2pts | <0%: 0pts",
+        },
+        {
+          name: "Analyst Rating",
+          maxPoints: 15,
+          thresholds:
+            "Strong Buy: 15pts | Buy: 12pts | Hold: 6pts | Sell: 3pts | Strong Sell: 0pts",
+        },
+      ],
+    },
+  };
+
+  const data = criteriaData[strategy as keyof typeof criteriaData];
+  if (!data)
+    return (
+      <div className="text-sm text-muted-foreground">
+        No criteria available.
+      </div>
+    );
+
+  const colorClasses = {
+    blue: {
+      dot: "bg-blue-500",
+      bg: "bg-blue-50",
+      text: "text-blue-900",
+      subtext: "text-blue-700",
+    },
+    green: {
+      dot: "bg-green-500",
+      bg: "bg-green-50",
+      text: "text-green-900",
+      subtext: "text-green-700",
+    },
+    purple: {
+      dot: "bg-purple-500",
+      bg: "bg-purple-50",
+      text: "text-purple-900",
+      subtext: "text-purple-700",
+    },
+    orange: {
+      dot: "bg-orange-500",
+      bg: "bg-orange-50",
+      text: "text-orange-900",
+      subtext: "text-orange-700",
+    },
+    indigo: {
+      dot: "bg-indigo-500",
+      bg: "bg-indigo-50",
+      text: "text-indigo-900",
+      subtext: "text-indigo-700",
+    },
+  };
+
+  const colors = colorClasses[data.color as keyof typeof colorClasses];
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">{data.description}</p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {data.metrics.map((metric, index) => (
+          <div key={index} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 ${colors.dot} rounded-full`}></div>
+                <span className="text-sm font-medium">{metric.name}</span>
+              </div>
+              <span className="text-xs text-muted-foreground font-mono">
+                (0-{metric.maxPoints} pts)
+              </span>
+            </div>
+            <div className="text-xs text-muted-foreground pl-4 leading-relaxed">
+              {metric.thresholds}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className={`mt-6 p-4 ${colors.bg} rounded-lg border`}>
+        <div className="flex items-center justify-between">
+          <div className={`text-sm font-medium ${colors.text}`}>
+            Total Score Range: 0-100 points
+          </div>
+          <div className={`text-xs ${colors.subtext}`}>
+            Max: 100 pts | Min: 0 pts
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StockScreener() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [error, setError] = useState("");
@@ -579,6 +914,18 @@ function StockScreener() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Strategy Criteria Display */}
+        <div className="mb-6">
+          <h3 className="text-md font-medium text-foreground mb-3">
+            {selectedStrategy.charAt(0).toUpperCase() +
+              selectedStrategy.slice(1)}{" "}
+            Strategy Criteria
+          </h3>
+          <div className="bg-muted/30 rounded-lg p-4">
+            {getStrategyCriteria(selectedStrategy)}
           </div>
         </div>
 
