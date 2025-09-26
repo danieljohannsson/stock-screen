@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import yfinance as yf
 import json
+from datetime import datetime
 from dotenv import load_dotenv
 from typing import Dict, Any
 
@@ -567,6 +568,7 @@ def get_stocks(
             "summary": info.get("longBusinessSummary"),
             "industry": info.get("industry"),
             "website": info.get("website"),
+            "last_fetched": datetime.utcnow().isoformat(),
         }
 
         # Calculate and add score using balanced strategy
