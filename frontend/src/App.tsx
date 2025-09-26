@@ -52,6 +52,7 @@ interface Stock {
   growth_score: number;
   momentum_score: number;
   quality_score: number;
+  last_fetched?: string;
 }
 
 type SortField = keyof Stock;

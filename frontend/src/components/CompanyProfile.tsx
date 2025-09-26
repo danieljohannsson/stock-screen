@@ -33,6 +33,7 @@ interface Stock {
   growth_score: number;
   momentum_score: number;
   quality_score: number;
+  last_fetched?: string;
 }
 
 interface CompanyProfileProps {
@@ -94,6 +95,14 @@ function CompanyProfile({ stock }: CompanyProfileProps) {
                     <span>Website</span>
                     <ExternalLink className="h-3 w-3" />
                   </a>
+                )}
+                {stock.last_fetched && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs">
+                      Data fetched:{" "}
+                      {new Date(stock.last_fetched).toLocaleString()}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
