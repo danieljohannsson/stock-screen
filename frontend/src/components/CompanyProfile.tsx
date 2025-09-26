@@ -50,7 +50,7 @@ function CompanyProfile() {
         const res = await fetch(
           `${
             import.meta.env.VITE_BACKEND_PRODUCTION_URL ||
-            "http://localhost:8000"
+            import.meta.env.VITE_BACKEND_LOCAL_URL
           }/stocks?limit=1000&strategy=balanced`
         );
         const data = await res.json();
