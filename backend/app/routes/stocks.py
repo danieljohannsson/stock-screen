@@ -44,15 +44,3 @@ def get_all_stocks(limit: int = 100, strategy: str = "balanced"):
     except Exception as e:
         print(f"Unexpected error: {e}")
         return {"error": "Internal server error"}
-
-@router.get("/search")
-def search_stocks(
-    symbol: Optional[str] = Query(default=None),
-    industry: Optional[str] = Query(default=None),
-    country: Optional[str] = Query(default="US")
-):
-    if symbol:
-        stock_data = get_stocks([symbol.upper()])
-        return stock_data
-    else:
-        return {"error": "Please provide a symbol or industry."}
