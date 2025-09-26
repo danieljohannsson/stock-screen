@@ -796,7 +796,7 @@ function StockScreener() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-semibold text-foreground">
-                Stock Screener
+                Stock Screen
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Discover undervalued stocks with comprehensive financial metrics
