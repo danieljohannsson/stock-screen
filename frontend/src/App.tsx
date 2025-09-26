@@ -4,6 +4,9 @@ import {
   Routes,
   Route,
   useNavigate,
+  useParams,
+  useLocation,
+  Link,
 } from "react-router-dom";
 import {
   Table,
@@ -21,6 +24,7 @@ import {
   Building2,
   ArrowUpDown,
   DollarSign,
+  ArrowLeft,
 } from "lucide-react";
 import CompanyProfile from "./components/CompanyProfile";
 
@@ -619,7 +623,9 @@ function StockScreener() {
                 <TableRow
                   key={stock.symbol}
                   className="hover:bg-muted/50 cursor-pointer"
-                  onClick={() => navigate(`/company/${stock.symbol}`)}
+                  onClick={() =>
+                    navigate(`/company/${stock.symbol}`, { state: { stock } })
+                  }
                 >
                   {getColumnsForStrategy(selectedStrategy).map((column) => (
                     <TableCell key={column.key}>
@@ -636,12 +642,108 @@ function StockScreener() {
   );
 }
 
+// Wrapper component to handle stock data passing
+function CompanyProfileWrapper() {
+  const { symbol } = useParams<{ symbol: string }>();
+  const location = useLocation();
+  const [stock, setStock] = useState<Stock | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Check if stock data was passed via navigation state
+    const passedStock = location.state?.stock;
+
+    if (passedStock && passedStock.symbol === symbol) {
+      setStock(passedStock);
+      setLoading(false);
+      return;
+    }
+
+    // Fallback: fetch stock data if not passed
+    const fetchStock = async () => {
+      if (!symbol) return;
+
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `${
+            import.meta.env.VITE_API_URL || "http://localhost:8000"
+          }/stocks?limit=1000&strategy=balanced`
+        );
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          const foundStock = data.find((s: Stock) => s.symbol === symbol);
+          if (foundStock) {
+            setStock(foundStock);
+          } else {
+            setError("Company not found");
+          }
+        } else {
+          setError("Error fetching company data");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Error fetching company data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStock();
+  }, [symbol, location.state]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-muted-foreground">
+                Loading company profile...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !stock) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <h1 className="text-2xl font-semibold text-destructive mb-4">
+                Company Not Found
+              </h1>
+              <p className="text-muted-foreground mb-6">{error}</p>
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Stock Screener
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <CompanyProfile stock={stock} />;
+}
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<StockScreener />} />
-        <Route path="/company/:symbol" element={<CompanyProfile />} />
+        <Route path="/company/:symbol" element={<CompanyProfileWrapper />} />
       </Routes>
     </Router>
   );
