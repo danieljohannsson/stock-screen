@@ -62,6 +62,18 @@ function StockScreener() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      fetch(
+        `${
+          import.meta.env.VITE_BACKEND_PRODUCTION_URL ||
+          import.meta.env.VITE_BACKEND_LOCAL_URL
+        }/health`
+      ).catch(() => {});
+    }, 5 * 60 * 1000); // every 5 minutes
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const fetchStocks = async () => {
       setLoading(true);
       try {
