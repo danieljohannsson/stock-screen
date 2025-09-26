@@ -17,6 +17,7 @@ def get_allowed_origins():
         "http://localhost:3000",  # Alternative local port
         "http://localhost:4173",
         "https://stock-rec.netlify.app",
+        "https://stock-screen.com",
     ]
     
     # Add localhost variations for development
