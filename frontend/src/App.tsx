@@ -293,13 +293,74 @@ function getStrategyCriteria(strategy: string) {
 }
 
 function StockScreener() {
-  const [stocks, setStocks] = useState<Stock[]>([]);
+  const [stocks, setStocks] = useState<Stock[]>(() => {
+    // Restore stocks data from localStorage if available for current strategy
+    const savedStocks = localStorage.getItem("stocksData");
+    const savedStrategy = localStorage.getItem("stocksDataStrategy");
+    const currentStrategy =
+      localStorage.getItem("selectedStrategy") || "balanced";
+
+    if (savedStocks && savedStrategy === currentStrategy) {
+      try {
+        return JSON.parse(savedStocks);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sortField, setSortField] = useState<SortField>("balanced_score");
+  const [sortField, setSortField] = useState<SortField>(() => {
+    // Set initial sort field based on restored strategy
+    const savedStrategy =
+      localStorage.getItem("selectedStrategy") || "balanced";
+    return `${savedStrategy}_score` as SortField;
+  });
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [selectedStrategy, setSelectedStrategy] = useState("balanced");
+  const [selectedStrategy, setSelectedStrategy] = useState(() => {
+    // Restore strategy from localStorage or default to "balanced"
+    return localStorage.getItem("selectedStrategy") || "balanced";
+  });
   const navigate = useNavigate();
+
+  // Save selected strategy to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("selectedStrategy", selectedStrategy);
+  }, [selectedStrategy]);
+
+  // Save stocks data to localStorage whenever it changes
+  useEffect(() => {
+    if (stocks.length > 0) {
+      localStorage.setItem("stocksData", JSON.stringify(stocks));
+      localStorage.setItem("stocksDataStrategy", selectedStrategy);
+    }
+  }, [stocks, selectedStrategy]);
+
+  // Restore scroll position when component mounts
+  useEffect(() => {
+    const savedScrollPosition = localStorage.getItem(
+      "stockScreenerScrollPosition"
+    );
+    if (savedScrollPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollPosition, 10));
+      }, 100); // Small delay to ensure DOM is ready
+    }
+  }, []);
+
+  // Save scroll position when navigating away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.setItem(
+        "stockScreenerScrollPosition",
+        window.scrollY.toString()
+      );
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -315,6 +376,23 @@ function StockScreener() {
 
   useEffect(() => {
     const fetchStocks = async () => {
+      // Check if we already have data for this strategy
+      const savedStocks = localStorage.getItem("stocksData");
+      const savedStrategy = localStorage.getItem("stocksDataStrategy");
+
+      if (savedStocks && savedStrategy === selectedStrategy) {
+        // Data already exists for this strategy, just update sort field
+        setSortField(`${selectedStrategy}_score` as SortField);
+        setError("");
+        return;
+      }
+
+      // Clear stocks if strategy changed and we don't have cached data
+      if (savedStrategy !== selectedStrategy) {
+        setStocks([]);
+      }
+
+      // Need to fetch new data
       setLoading(true);
       try {
         const res = await fetch(
@@ -874,9 +952,14 @@ function StockScreener() {
                 <TableRow
                   key={stock.symbol}
                   className="hover:bg-muted/50 cursor-pointer"
-                  onClick={() =>
-                    navigate(`/company/${stock.symbol}`, { state: { stock } })
-                  }
+                  onClick={() => {
+                    // Save current scroll position before navigating
+                    localStorage.setItem(
+                      "stockScreenerScrollPosition",
+                      window.scrollY.toString()
+                    );
+                    navigate(`/company/${stock.symbol}`, { state: { stock } });
+                  }}
                 >
                   {getColumnsForStrategy(selectedStrategy).map((column) => (
                     <TableCell key={column.key}>
