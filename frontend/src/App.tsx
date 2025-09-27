@@ -62,111 +62,70 @@ function getStrategyCriteria(strategy: string) {
   const criteriaData = {
     balanced: {
       description:
-        "Equal weight approach considering all investment factors for comprehensive evaluation.",
+        "Equal weight approach considering all investment factors with binary pass/fail criteria.",
       color: "blue",
       metrics: [
         {
           name: "Revenue Growth",
-          maxPoints: 14,
-          thresholds:
-            "≥15%: 14pts | ≥10%: 12pts | ≥5%: 10pts | ≥2%: 8pts | ≥0%: 6pts | <0%: 0pts",
+          maxPoints: 20,
+          thresholds: ">5%: Pass (20pts) | ≤5%: Fail (0pts)",
         },
         {
-          name: "Earnings Growth",
-          maxPoints: 14,
-          thresholds:
-            "≥20%: 14pts | ≥15%: 12pts | ≥10%: 10pts | ≥5%: 8pts | ≥0%: 6pts | <0%: 0pts",
+          name: "Return on Equity",
+          maxPoints: 20,
+          thresholds: ">15%: Pass (20pts) | ≤15%: Fail (0pts)",
         },
         {
-          name: "ROE",
-          maxPoints: 14,
-          thresholds:
-            "≥20%: 14pts | ≥15%: 12pts | ≥10%: 10pts | ≥5%: 8pts | ≥0%: 6pts | <0%: 0pts",
-        },
-        {
-          name: "D/E Ratio",
-          maxPoints: 14,
-          thresholds:
-            "≤0.3: 14pts | ≤0.5: 12pts | ≤0.7: 10pts | ≤1.0: 8pts | ≤1.5: 6pts | >1.5: 0pts",
+          name: "Debt to Equity",
+          maxPoints: 20,
+          thresholds: "0-1: Pass (20pts) | Outside range: Fail (0pts)",
         },
         {
           name: "Free Cash Flow",
-          maxPoints: 14,
-          thresholds:
-            ">$10B: 14pts | >$5B: 12pts | >$1B: 10pts | >$500M: 8pts | >$0: 6pts | ≤$0: 0pts",
+          maxPoints: 20,
+          thresholds: ">0: Pass (20pts) | ≤0: Fail (0pts)",
         },
         {
           name: "PEG Ratio",
-          maxPoints: 14,
-          thresholds:
-            "≤0.5: 14pts | ≤0.8: 12pts | ≤1.0: 10pts | ≤1.2: 8pts | ≤1.5: 6pts | >1.5: 0pts",
-        },
-        {
-          name: "P/E Ratio",
-          maxPoints: 8,
-          thresholds:
-            "≤10: 8pts | ≤15: 6pts | ≤20: 4pts | ≤25: 2pts | >25: 0pts",
-        },
-        {
-          name: "Analyst Rating",
-          maxPoints: 8,
-          thresholds:
-            "Strong Buy: 8pts | Buy: 6pts | Hold: 4pts | Sell: 2pts | Strong Sell: 0pts",
+          maxPoints: 20,
+          thresholds: "0-2: Pass (20pts) | Outside range: Fail (0pts)",
         },
       ],
     },
     value: {
       description:
-        "Focus on undervalued stocks with strong fundamentals and reasonable valuations.",
+        "Focus on undervalued stocks with strong fundamentals using strict criteria.",
       color: "green",
       metrics: [
         {
           name: "Revenue Growth",
-          maxPoints: 12,
-          thresholds:
-            "≥15%: 12pts | ≥10%: 10pts | ≥5%: 8pts | ≥2%: 6pts | ≥0%: 4pts | <0%: 0pts",
+          maxPoints: 16.7,
+          thresholds: ">5%: Pass (16.7pts) | ≤5%: Fail (0pts)",
         },
         {
           name: "Earnings Growth",
-          maxPoints: 12,
-          thresholds:
-            "≥20%: 12pts | ≥15%: 10pts | ≥10%: 8pts | ≥5%: 6pts | ≥0%: 4pts | <0%: 0pts",
+          maxPoints: 16.7,
+          thresholds: ">5%: Pass (16.7pts) | ≤5%: Fail (0pts)",
         },
         {
-          name: "ROE",
-          maxPoints: 15,
-          thresholds:
-            "≥20%: 15pts | ≥15%: 12pts | ≥10%: 10pts | ≥5%: 8pts | ≥0%: 6pts | <0%: 0pts",
+          name: "Return on Equity",
+          maxPoints: 16.7,
+          thresholds: ">15%: Pass (16.7pts) | ≤15%: Fail (0pts)",
         },
         {
-          name: "D/E Ratio",
-          maxPoints: 12,
-          thresholds:
-            "≤0.3: 12pts | ≤0.5: 10pts | ≤0.7: 8pts | ≤1.0: 6pts | ≤1.5: 4pts | >1.5: 0pts",
+          name: "Debt to Equity",
+          maxPoints: 16.7,
+          thresholds: "0-1: Pass (16.7pts) | Outside range: Fail (0pts)",
         },
         {
           name: "Free Cash Flow",
-          maxPoints: 15,
-          thresholds:
-            ">$10B: 15pts | >$5B: 12pts | >$1B: 10pts | >$500M: 8pts | >$0: 6pts | ≤$0: 0pts",
+          maxPoints: 16.7,
+          thresholds: ">0: Pass (16.7pts) | ≤0: Fail (0pts)",
         },
         {
           name: "PEG Ratio",
-          maxPoints: 12,
-          thresholds:
-            "≤0.5: 12pts | ≤0.8: 10pts | ≤1.0: 8pts | ≤1.2: 6pts | ≤1.5: 4pts | >1.5: 0pts",
-        },
-        {
-          name: "P/E Ratio",
-          maxPoints: 10,
-          thresholds:
-            "≤10: 10pts | ≤15: 8pts | ≤20: 6pts | ≤25: 4pts | ≤30: 2pts | >30: 0pts",
-        },
-        {
-          name: "Analyst Rating",
-          maxPoints: 12,
-          thresholds:
-            "Strong Buy: 12pts | Buy: 10pts | Hold: 6pts | Sell: 3pts | Strong Sell: 0pts",
+          maxPoints: 16.7,
+          thresholds: "0-1: Pass (16.7pts) | Outside range: Fail (0pts)",
         },
       ],
     },
@@ -176,46 +135,19 @@ function getStrategyCriteria(strategy: string) {
       color: "purple",
       metrics: [
         {
-          name: "PEG Ratio",
-          maxPoints: 20,
-          thresholds:
-            "≤0.5: 20pts | ≤0.8: 16pts | ≤1.0: 12pts | ≤1.2: 8pts | ≤1.5: 4pts | >1.5: 0pts",
-        },
-        {
           name: "Revenue Growth",
-          maxPoints: 20,
-          thresholds:
-            "≥25%: 20pts | ≥20%: 16pts | ≥15%: 12pts | ≥10%: 8pts | ≥5%: 4pts | <5%: 0pts",
+          maxPoints: 33.3,
+          thresholds: "≥20%: Pass (33.3pts) | <20%: Fail (0pts)",
         },
         {
           name: "D/E Ratio",
-          maxPoints: 15,
-          thresholds:
-            "≤0.3: 15pts | ≤0.5: 12pts | ≤0.7: 9pts | ≤1.0: 6pts | ≤1.5: 3pts | >1.5: 0pts",
+          maxPoints: 33.3,
+          thresholds: "0-5: Pass (33.3pts) | Outside range: Fail (0pts)",
         },
         {
-          name: "Analyst Rating",
-          maxPoints: 15,
-          thresholds:
-            "Strong Buy: 15pts | Buy: 12pts | Hold: 6pts | Sell: 3pts | Strong Sell: 0pts",
-        },
-        {
-          name: "P/E Ratio",
-          maxPoints: 10,
-          thresholds:
-            "≤15: 10pts | ≤20: 8pts | ≤25: 6pts | ≤30: 4pts | ≤40: 2pts | >40: 0pts",
-        },
-        {
-          name: "ROE",
-          maxPoints: 10,
-          thresholds:
-            "≥20%: 10pts | ≥15%: 8pts | ≥10%: 6pts | ≥5%: 4pts | ≥0%: 2pts | <0%: 0pts",
-        },
-        {
-          name: "Free Cash Flow",
-          maxPoints: 10,
-          thresholds:
-            ">$5B: 10pts | >$1B: 8pts | >$500M: 6pts | >$100M: 4pts | >$0: 2pts | ≤$0: 0pts",
+          name: "PEG Ratio",
+          maxPoints: 33.3,
+          thresholds: "0-2: Pass (33.3pts) | Outside range: Fail (0pts)",
         },
       ],
     },
@@ -226,39 +158,18 @@ function getStrategyCriteria(strategy: string) {
       metrics: [
         {
           name: "Earnings Growth",
-          maxPoints: 25,
-          thresholds:
-            "≥30%: 25pts | ≥25%: 20pts | ≥20%: 15pts | ≥15%: 10pts | ≥10%: 5pts | <10%: 0pts",
+          maxPoints: 33.3,
+          thresholds: ">15%: Pass (33.3pts) | ≤15%: Fail (0pts)",
         },
         {
           name: "Revenue Growth",
-          maxPoints: 25,
-          thresholds:
-            "≥30%: 25pts | ≥25%: 20pts | ≥20%: 15pts | ≥15%: 10pts | ≥10%: 5pts | <10%: 0pts",
+          maxPoints: 33.3,
+          thresholds: ">10%: Pass (33.3pts) | ≤10%: Fail (0pts)",
         },
         {
-          name: "ROE",
-          maxPoints: 20,
-          thresholds:
-            "≥25%: 20pts | ≥20%: 16pts | ≥15%: 12pts | ≥10%: 8pts | ≥5%: 4pts | <5%: 0pts",
-        },
-        {
-          name: "Analyst Rating",
-          maxPoints: 15,
-          thresholds:
-            "Strong Buy: 15pts | Buy: 12pts | Hold: 6pts | Sell: 3pts | Strong Sell: 0pts",
-        },
-        {
-          name: "P/E Ratio",
-          maxPoints: 10,
-          thresholds:
-            "≤15: 10pts | ≤20: 8pts | ≤25: 6pts | ≤30: 4pts | ≤40: 2pts | >40: 0pts",
-        },
-        {
-          name: "Free Cash Flow",
-          maxPoints: 5,
-          thresholds:
-            ">$1B: 5pts | >$500M: 4pts | >$100M: 3pts | >$0: 2pts | ≤$0: 0pts",
+          name: "Return on Equity",
+          maxPoints: 33.3,
+          thresholds: ">20%: Pass (33.3pts) | ≤20%: Fail (0pts)",
         },
       ],
     },
@@ -268,46 +179,34 @@ function getStrategyCriteria(strategy: string) {
       color: "indigo",
       metrics: [
         {
-          name: "P/B Ratio",
-          maxPoints: 15,
-          thresholds:
-            "≤1.0: 15pts | ≤1.5: 12pts | ≤2.0: 9pts | ≤2.5: 6pts | ≤3.0: 3pts | >3.0: 0pts",
+          name: "PB Ratio",
+          maxPoints: 16.7,
+          thresholds: "0-5: Pass (16.7pts) | Outside range: Fail (0pts)",
         },
         {
-          name: "ROE",
-          maxPoints: 20,
-          thresholds:
-            "≥25%: 20pts | ≥20%: 16pts | ≥15%: 12pts | ≥10%: 8pts | ≥5%: 4pts | <5%: 0pts",
+          name: "Return on Equity",
+          maxPoints: 16.7,
+          thresholds: ">15%: Pass (16.7pts) | ≤15%: Fail (0pts)",
         },
         {
-          name: "D/E Ratio",
-          maxPoints: 15,
-          thresholds:
-            "≤0.2: 15pts | ≤0.3: 12pts | ≤0.5: 9pts | ≤0.7: 6pts | ≤1.0: 3pts | >1.0: 0pts",
+          name: "Debt to Equity",
+          maxPoints: 16.7,
+          thresholds: "0-0.5: Pass (16.7pts) | Outside range: Fail (0pts)",
         },
         {
           name: "Free Cash Flow",
-          maxPoints: 15,
-          thresholds:
-            ">$10B: 15pts | >$5B: 12pts | >$1B: 9pts | >$500M: 6pts | >$0: 3pts | ≤$0: 0pts",
+          maxPoints: 16.7,
+          thresholds: ">0: Pass (16.7pts) | ≤0: Fail (0pts)",
         },
         {
           name: "Dividend Yield",
-          maxPoints: 10,
-          thresholds:
-            "≥4%: 10pts | ≥3%: 8pts | ≥2%: 6pts | ≥1%: 4pts | ≥0.5%: 2pts | <0.5%: 0pts",
+          maxPoints: 16.7,
+          thresholds: ">0: Pass (16.7pts) | ≤0: Fail (0pts)",
         },
         {
           name: "Revenue Growth",
-          maxPoints: 10,
-          thresholds:
-            "≥10%: 10pts | ≥7%: 8pts | ≥5%: 6pts | ≥2%: 4pts | ≥0%: 2pts | <0%: 0pts",
-        },
-        {
-          name: "Analyst Rating",
-          maxPoints: 15,
-          thresholds:
-            "Strong Buy: 15pts | Buy: 12pts | Hold: 6pts | Sell: 3pts | Strong Sell: 0pts",
+          maxPoints: 16.7,
+          thresholds: ">0: Pass (16.7pts) | ≤0: Fail (0pts)",
         },
       ],
     },
