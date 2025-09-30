@@ -46,7 +46,6 @@ Thumbs.db
 .env
 
 backend/stocks.json
-backend/tickers_nyse.json
 
 # Logs
 *.log
