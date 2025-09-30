@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import stocks
 from apscheduler.schedulers.background import BackgroundScheduler
+from app.database import create_tables
 
 app = FastAPI()
 
@@ -42,6 +43,10 @@ app.include_router(stocks.router)
 
 @app.on_event("startup")
 def start_scheduler():
+    # Create database tables
+    create_tables()
+    print("🗄️ Database tables created!")
+    
     scheduler = BackgroundScheduler()
     scheduler.add_job(get_stocks, "interval", minutes=0.5) # every 30 seconds
     scheduler.start()
