@@ -1,4 +1,5 @@
 import os
+import math
 from pathlib import Path
 import yfinance as yf
 import json
@@ -13,7 +14,7 @@ load_dotenv()
 
 BATCH_SIZE = 30
 
-def calculate_stock_score(stock_data: Dict[str, Any], strategy: str = "balanced") -> float:
+def calculate_stock_score(stock_data: Dict[str, Any], strategy: str = "balanced") -> int:
     """
     Calculate a comprehensive score for a stock based on the selected strategy.
     Higher scores indicate better investment potential.
@@ -38,7 +39,7 @@ def calculate_stock_score(stock_data: Dict[str, Any], strategy: str = "balanced"
     else:  # balanced
         return _calculate_balanced_score(stock_data, safe_float)
 
-def _calculate_balanced_score(stock_data: Dict[str, Any], safe_float) -> float:
+def _calculate_balanced_score(stock_data: Dict[str, Any], safe_float) -> int:
     """Balanced approach with binary pass/fail criteria"""
     score = 0.0
     
@@ -67,9 +68,9 @@ def _calculate_balanced_score(stock_data: Dict[str, Any], safe_float) -> float:
     if peg_ratio is not None and 0 < peg_ratio < 2:
         score += 20
     
-    return round(score, 2)
+    return min(100, int(math.ceil(score)))
 
-def _calculate_value_score(stock_data: Dict[str, Any], safe_float) -> float:
+def _calculate_value_score(stock_data: Dict[str, Any], safe_float) -> int:
     """Value investing strategy with binary pass/fail criteria"""
     score = 0.0
     
@@ -103,9 +104,9 @@ def _calculate_value_score(stock_data: Dict[str, Any], safe_float) -> float:
     if peg_ratio is not None and 0 < peg_ratio < 1:
         score += 16.7
     
-    return round(score, 2)
+    return min(100, int(math.ceil(score)))
 
-def _calculate_growth_score(stock_data: Dict[str, Any], safe_float) -> float:
+def _calculate_growth_score(stock_data: Dict[str, Any], safe_float) -> int:
     """Growth investing strategy with binary pass/fail criteria"""
     score = 0.0
     
@@ -124,9 +125,9 @@ def _calculate_growth_score(stock_data: Dict[str, Any], safe_float) -> float:
     if peg_ratio is not None and 0 < peg_ratio <= 2:
         score += 33.3
     
-    return round(score, 2)
+    return min(100, int(math.ceil(score)))
 
-def _calculate_momentum_score(stock_data: Dict[str, Any], safe_float) -> float:
+def _calculate_momentum_score(stock_data: Dict[str, Any], safe_float) -> int:
     """Momentum investing strategy with binary pass/fail criteria"""
     score = 0.0
     
@@ -145,9 +146,9 @@ def _calculate_momentum_score(stock_data: Dict[str, Any], safe_float) -> float:
     if roe is not None and roe > 0.20:
         score += 33.3
     
-    return round(score, 2)
+    return min(100, int(math.ceil(score)))
 
-def _calculate_quality_score(stock_data: Dict[str, Any], safe_float) -> float:
+def _calculate_quality_score(stock_data: Dict[str, Any], safe_float) -> int:
     """Quality investing strategy with binary pass/fail criteria"""
     score = 0.0
     
@@ -181,7 +182,7 @@ def _calculate_quality_score(stock_data: Dict[str, Any], safe_float) -> float:
     if revenue_growth is not None and revenue_growth > 0:
         score += 16.7
     
-    return round(score, 2)
+    return min(100, int(math.ceil(score)))
 
 def fetch_info(ticker: str):
     try:
@@ -196,7 +197,7 @@ def get_tickers_from_json() -> List[str]:
     try:
         with open(ticker_file, "r") as f:
             ticker_info = json.load(f)
-            return ticker_info.get('tickers', [])
+            return ticker_info  
     except FileNotFoundError:
         print(f"Ticker file {ticker_file} not found")
         return []
