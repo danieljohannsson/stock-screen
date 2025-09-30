@@ -14,6 +14,8 @@ services:
         fromDatabase:
           name: stock-rec-db
           property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
 
   - type: pserv
     name: stock-rec-db
