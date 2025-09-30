@@ -196,8 +196,15 @@ def get_tickers_from_json() -> List[str]:
     ticker_file = "tickers_nyse.json"
     try:
         with open(ticker_file, "r") as f:
-            ticker_info = json.load(f)
-            return ticker_info  
+            ticker_data = json.load(f)
+            # Handle both list format and dict format
+            if isinstance(ticker_data, list):
+                return ticker_data
+            elif isinstance(ticker_data, dict):
+                return ticker_data.get('tickers', [])
+            else:
+                print(f"Unexpected ticker file format: {type(ticker_data)}")
+                return []
     except FileNotFoundError:
         print(f"Ticker file {ticker_file} not found")
         return []
