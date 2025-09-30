@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/95b2361e-185d-4191-a412-366ab603641a/deploy-status)](https://app.netlify.com/projects/stock-rec/deploys)
+
 <h2 align="center">
 Stock Screen: <br /> Identify undervalued stocks in real-time.
 </h2>
