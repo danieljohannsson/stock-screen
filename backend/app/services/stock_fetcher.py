@@ -4,7 +4,10 @@ import yfinance as yf
 import json
 from datetime import datetime
 from dotenv import load_dotenv
-from typing import Dict, Any
+from typing import Dict, Any, List
+from sqlalchemy.orm import Session
+from app.database import SessionLocal
+from app.models import Stock, TickerProgress
 
 load_dotenv()
 
@@ -187,84 +190,162 @@ def fetch_info(ticker: str):
         print(f"Error fetching quote for {ticker}: {e}")
         return {}
 
-
-def get_stocks(
-        
-):
-    stocks = []
-
+def get_tickers_from_json() -> List[str]:
+    """Load tickers from the existing JSON file"""
     ticker_file = "tickers_nyse.json"
-
-    output_file="stocks.json"
-    # Ensure JSON file exists
-    if not Path(output_file).exists():
-        with open(output_file, "w") as f:
-            json.dump({}, f)
+    try:
         with open(ticker_file, "r") as f:
             ticker_info = json.load(f)
-            ticker_info['last_index'] = 0
-            with open(ticker_file, "w") as f:
-                json.dump(ticker_info, f)
+            return ticker_info.get('tickers', [])
+    except FileNotFoundError:
+        print(f"Ticker file {ticker_file} not found")
+        return []
 
-    with open(output_file, "r") as f:
-        all_data = json.load(f)
+def get_or_create_progress(db: Session) -> TickerProgress:
+    """Get or create ticker progress record"""
+    progress = db.query(TickerProgress).first()
+    if not progress:
+        progress = TickerProgress(last_index=0, total_tickers=0)
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
+    return progress
+
+def save_stock_to_db(db: Session, symbol: str, metrics: Dict[str, Any]):
+    """Save or update stock data in the database"""
+    # Check if stock already exists
+    existing_stock = db.query(Stock).filter(Stock.symbol == symbol).first()
     
-    with open(ticker_file, "r") as f:
-        ticker_info = json.load(f)
-        all_tickers = ticker_info['tickers']
-        index = ticker_info['last_index']
+    if existing_stock:
+        # Update existing stock
+        for key, value in metrics.items():
+            if hasattr(existing_stock, key):
+                setattr(existing_stock, key, value)
+        existing_stock.last_fetched = datetime.utcnow()
+    else:
+        # Create new stock
+        stock = Stock(symbol=symbol, **metrics)
+        db.add(stock)
+    
+    db.commit()
 
-    batch = all_tickers[index:index + BATCH_SIZE] # Process next batch
-    real_batch_size = len(batch)
+def get_stocks():
+    """Main function to fetch and save stock data"""
+    db = SessionLocal()
+    
+    try:
+        # Get tickers from JSON file
+        all_tickers = get_tickers_from_json()
+        if not all_tickers:
+            print("No tickers found in JSON file")
+            return []
+        
+        # Get or create progress tracking
+        progress = get_or_create_progress(db)
+        
+        # Initialize total tickers if not set
+        if progress.total_tickers == 0:
+            progress.total_tickers = len(all_tickers)
+            db.commit()
+        
+        # Get current batch
+        index = progress.last_index
+        batch = all_tickers[index:index + BATCH_SIZE]
+        real_batch_size = len(batch)
+        
+        if real_batch_size < BATCH_SIZE:
+            remaining = BATCH_SIZE - real_batch_size
+            batch += all_tickers[:remaining]
+        
+        print(f"Processing batch starting at index {index}, processing {len(batch)} tickers")
+        
+        for symbol in batch:
+            info = fetch_info(symbol)
+            print(f"Fetched info for {symbol}")
+            
+            metrics = {
+                "name": info.get("shortName") if info.get("shortName") else info.get("displayName"),
+                "price": info.get("currentPrice"),
+                "pe_ratio": info.get("trailingPE"),
+                "ps_ratio": info.get("priceToSalesTrailing12Months"),
+                "pb_ratio": info.get("priceToBook"),
+                "peg_ratio": info.get("trailingPegRatio"),
+                "roe": info.get("returnOnEquity"),
+                "dividend_yield": info.get("dividendYield"),
+                "free_cash_flow": info.get("freeCashflow"),
+                "revenue_growth": info.get("revenueGrowth"),
+                "earnings_growth": info.get("earningsGrowth"),
+                "de_ratio": info.get("debtToEquity") / 100 if info.get("debtToEquity") else None,
+                "average_analyst_rating": info.get("averageAnalystRating").split(" - ")[1] if info.get("averageAnalystRating") else None,
+                "summary": info.get("longBusinessSummary"),
+                "industry": info.get("industry"),
+                "website": info.get("website"),
+                "last_fetched": datetime.utcnow(),
+            }
+            
+            # Calculate and add scores
+            metrics["balanced_score"] = calculate_stock_score(metrics, "balanced")
+            metrics["value_score"] = calculate_stock_score(metrics, "value")
+            metrics["growth_score"] = calculate_stock_score(metrics, "growth")
+            metrics["momentum_score"] = calculate_stock_score(metrics, "momentum")
+            metrics["quality_score"] = calculate_stock_score(metrics, "quality")
+            
+            # Save to database
+            save_stock_to_db(db, symbol, metrics)
+        
+        # Update progress
+        if real_batch_size < BATCH_SIZE:
+            progress.last_index = remaining
+        else:
+            progress.last_index = index + BATCH_SIZE
+        
+        db.commit()
+        
+        print(f"✅ Saved {len(batch)} stocks to database")
+        print(f"Progress: {progress.last_index}/{progress.total_tickers} tickers processed")
+        
+        return []
+        
+    except Exception as e:
+        print(f"Error in get_stocks: {e}")
+        db.rollback()
+        return []
+    finally:
+        db.close()
 
-    if real_batch_size < BATCH_SIZE:
-        remaining = BATCH_SIZE - real_batch_size
-        batch += all_tickers[:remaining]
-
-    for symbol in batch:
-        info = fetch_info(symbol)
-        print(f"Fetched info for {symbol}")  # Print first 100 chars
-
-
-        metrics = {
-            "name": info.get("shortName") if info.get("shortName") else info.get("displayName") ,
-            "price": info.get("currentPrice"),
-            "pe_ratio": info.get("trailingPE"),
-            "ps_ratio": info.get("priceToSalesTrailing12Months"),
-            "pb_ratio": info.get("priceToBook"),
-            "peg_ratio": info.get("trailingPegRatio"),
-            "roe": info.get("returnOnEquity"),
-            "dividend_yield": info.get("dividendYield"),
-            "free_cash_flow": info.get("freeCashflow"),
-            "revenue_growth": info.get("revenueGrowth"),
-            "earnings_growth": info.get("earningsGrowth"),
-            "de_ratio": info.get("debtToEquity") / 100 if info.get("debtToEquity") else None,
-            "average_analyst_rating": info.get("averageAnalystRating").split(" - ")[1] if info.get("averageAnalystRating") else None,
-            "summary": info.get("longBusinessSummary"),
-            "industry": info.get("industry"),
-            "website": info.get("website"),
-            "last_fetched": datetime.utcnow().isoformat(),
+def get_stocks_from_db(db: Session, limit: int = 100, strategy: str = "balanced") -> List[Dict]:
+    """Get stocks from database sorted by strategy score"""
+    score_column = getattr(Stock, f"{strategy}_score")
+    
+    stocks = db.query(Stock).order_by(score_column.desc()).limit(limit).all()
+    
+    result = []
+    for stock in stocks:
+        stock_dict = {
+            "symbol": stock.symbol,
+            "name": stock.name,
+            "price": stock.price,
+            "pe_ratio": stock.pe_ratio,
+            "ps_ratio": stock.ps_ratio,
+            "pb_ratio": stock.pb_ratio,
+            "peg_ratio": stock.peg_ratio,
+            "roe": stock.roe,
+            "dividend_yield": stock.dividend_yield,
+            "free_cash_flow": stock.free_cash_flow,
+            "revenue_growth": stock.revenue_growth,
+            "earnings_growth": stock.earnings_growth,
+            "de_ratio": stock.de_ratio,
+            "average_analyst_rating": stock.average_analyst_rating,
+            "summary": stock.summary,
+            "industry": stock.industry,
+            "website": stock.website,
+            "last_fetched": stock.last_fetched.isoformat() if stock.last_fetched else None,
+            "balanced_score": stock.balanced_score,
+            "value_score": stock.value_score,
+            "growth_score": stock.growth_score,
+            "momentum_score": stock.momentum_score,
+            "quality_score": stock.quality_score,
         }
-
-        # Calculate and add score using balanced strategy
-        metrics["balanced_score"] = calculate_stock_score(metrics, "balanced")
-        metrics["value_score"] = calculate_stock_score(metrics, "value")
-        metrics["growth_score"] = calculate_stock_score(metrics, "growth")
-        metrics["momentum_score"] = calculate_stock_score(metrics, "momentum")
-        metrics["quality_score"] = calculate_stock_score(metrics, "quality")
-
-        # Save ticker as key
-        all_data[symbol] = metrics
-
-    # Update index pointer
-    ticker_info["last_index"] = remaining if real_batch_size < BATCH_SIZE else index + BATCH_SIZE
-
-    with open(output_file, "w") as f:
-        json.dump(all_data, f, indent=2)
-
-    with open(ticker_file, "w") as f:
-        json.dump(ticker_info, f, indent=2)
-
-    print(f"✅ Saved {len(batch)} stocks to {output_file}")
-
-    return stocks
+        result.append(stock_dict)
+    
+    return result

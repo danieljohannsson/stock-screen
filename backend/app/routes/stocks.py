@@ -1,9 +1,9 @@
-# app/routes/stocks.py
-import json
 from datetime import datetime
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from typing import Optional
-from app.services.stock_fetcher import get_stocks, calculate_stock_score
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.services.stock_fetcher import get_stocks_from_db, calculate_stock_score
 
 router = APIRouter()
 
@@ -22,39 +22,24 @@ def health_check():
     }
 
 @router.get("/stocks")
-def get_all_stocks(limit: int = 100, strategy: str = "balanced"):
+def get_all_stocks(
+    limit: int = 100, 
+    strategy: str = "balanced",
+    db: Session = Depends(get_db)
+):
     try:
-        with open("stocks.json", "r") as f:
-            stocks_data = json.load(f)
-
-        # Convert the dictionary to a list of stock objects with symbol included
-        stocks = []
-        for symbol, data in stocks_data.items():
-            stock = {
-                "symbol": symbol, 
-                **data
-            }
-            stocks.append(stock)
+        # Get stocks from database
+        stocks = get_stocks_from_db(db, limit=limit, strategy=strategy)
         
-        # Sort by the selected strategy score in descending order (highest scores first)
-        score_field = f"{strategy}_score"
-        stocks.sort(key=lambda x: x.get(score_field, 0), reverse=True)
+        print(f"Returning {len(stocks)} top-scoring stocks (limited to {limit})")
+        if stocks:
+            score_field = f"{strategy}_score"
+            scores = [stock.get(score_field, 0) for stock in stocks if stock.get(score_field) is not None]
+            if scores:
+                print(f"Score range: {max(scores)} - {min(scores)}")
         
-        # Return only the top-scoring stocks up to the limit
-        top_stocks = stocks[:limit]
+        return stocks
         
-        print(f"Returning {len(top_stocks)} top-scoring stocks (limited to {limit})")
-        if top_stocks:
-            scores = [stock.get(score_field, 0) for stock in top_stocks]
-            print(f"Score range: {max(scores)} - {min(scores)}")
-        
-        return top_stocks
-    except FileNotFoundError:
-        print("stocks.json file not found")
-        return {"error": "Stocks data not available"}
-    except json.JSONDecodeError as e:
-        print(f"JSON decode error: {e}")
-        return {"error": "Invalid stocks data format"}
     except Exception as e:
         print(f"Unexpected error: {e}")
         return {"error": "Internal server error"}
