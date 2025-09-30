@@ -26,9 +26,14 @@ import {
   DollarSign,
   ArrowLeft,
   RefreshCw,
+  User,
+  Heart,
 } from "lucide-react";
 import CompanyProfile from "./components/CompanyProfile";
 import HealthIndicator from "./components/HealthIndicator";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { SocialLogin } from "./components/SocialLogin";
+import { UserProfile } from "./components/UserProfile";
 
 interface Stock {
   symbol: string;
@@ -294,6 +299,17 @@ function getStrategyCriteria(strategy: string) {
 }
 
 function StockScreener() {
+  const {
+    user,
+    isAuthenticated,
+    addToFavorites,
+    removeFromFavorites,
+    favorites,
+  } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
   const [stocks, setStocks] = useState<Stock[]>(() => {
     // Restore stocks data from localStorage if available for current strategy
     const savedStocks = localStorage.getItem("stocksData");
@@ -323,6 +339,24 @@ function StockScreener() {
     setError("");
     // Trigger re-fetch by calling fetchStocks
     window.location.reload(); // Simple approach to trigger full refresh
+  };
+
+  // Handle favorite toggle
+  const handleFavoriteToggle = async (stockSymbol: string) => {
+    if (!isAuthenticated) {
+      setShowLogin(true);
+      return;
+    }
+
+    try {
+      if (favorites.includes(stockSymbol)) {
+        await removeFromFavorites(stockSymbol);
+      } else {
+        await addToFavorites(stockSymbol);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
   };
   const [sortField, setSortField] = useState<SortField>(() => {
     // Set initial sort field based on restored strategy
@@ -500,6 +534,11 @@ function StockScreener() {
         key: "name",
         label: "Company",
         icon: <ArrowUpDown className="h-4 w-4" />,
+      },
+      {
+        key: "favorite",
+        label: "",
+        icon: <Heart className="h-4 w-4" />,
       },
     ];
 
@@ -783,6 +822,29 @@ function StockScreener() {
             N/A
           </Badge>
         );
+      case "favorite":
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFavoriteToggle(stock.symbol);
+            }}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            title={
+              favorites.includes(stock.symbol)
+                ? "Remove from favorites"
+                : "Add to favorites"
+            }
+          >
+            <Heart
+              className={`h-4 w-4 ${
+                favorites.includes(stock.symbol)
+                  ? "fill-red-500 text-red-500"
+                  : "text-gray-400 hover:text-red-500"
+              }`}
+            />
+          </button>
+        );
       default:
         return "--";
     }
@@ -811,6 +873,44 @@ function StockScreener() {
                 <RefreshCw className="h-4 w-4" />
                 Refresh
               </button>
+
+              {/* Authentication UI */}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  {user?.picture ? (
+                    <img
+                      src={user.picture}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                      onClick={() => setShowUserProfile(true)}
+                      title={`Signed in as ${user.name}`}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setShowUserProfile(true)}
+                      className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                      title={`Signed in as ${user?.name}`}
+                    >
+                      <User className="h-4 w-4 text-gray-600" />
+                    </button>
+                  )}
+                  {favorites.length > 0 && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Heart className="h-3 w-3 text-red-500" />
+                      <span>{favorites.length}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors"
+                >
+                  <User className="h-4 w-4" />
+                  Sign In
+                </button>
+              )}
+
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 bg-green-500 rounded-full"></div>
                 <span className="text-xs text-muted-foreground">
@@ -1002,6 +1102,41 @@ function StockScreener() {
           </Table>
         </div>
       </div>
+
+      {/* Login Modal */}
+      {showLogin && (
+        <div className="fixed inset-0 bg-gray-900/5 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <SocialLogin
+              onSuccess={() => {
+                setShowLogin(false);
+                setLoginError("");
+              }}
+              onError={(error) => setLoginError(error)}
+            />
+            {loginError && (
+              <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+                <p className="text-red-700 text-sm">{loginError}</p>
+              </div>
+            )}
+            <button
+              onClick={() => setShowLogin(false)}
+              className="mt-4 w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {showUserProfile && (
+        <div className="fixed inset-0 bg-gray-900/5 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="relative">
+            <UserProfile onClose={() => setShowUserProfile(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1104,12 +1239,14 @@ function CompanyProfileWrapper() {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<StockScreener />} />
-        <Route path="/company/:symbol" element={<CompanyProfileWrapper />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<StockScreener />} />
+          <Route path="/company/:symbol" element={<CompanyProfileWrapper />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
