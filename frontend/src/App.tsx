@@ -25,6 +25,7 @@ import {
   ArrowUpDown,
   DollarSign,
   ArrowLeft,
+  RefreshCw,
 } from "lucide-react";
 import CompanyProfile from "./components/CompanyProfile";
 import HealthIndicator from "./components/HealthIndicator";
@@ -311,6 +312,18 @@ function StockScreener() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Function to force refresh data
+  const forceRefresh = () => {
+    localStorage.removeItem("stocksData");
+    localStorage.removeItem("stocksDataStrategy");
+    localStorage.removeItem("stocksDataVersion");
+    setStocks([]);
+    setLoading(true);
+    setError("");
+    // Trigger re-fetch by calling fetchStocks
+    window.location.reload(); // Simple approach to trigger full refresh
+  };
   const [sortField, setSortField] = useState<SortField>(() => {
     // Set initial sort field based on restored strategy
     const savedStrategy =
@@ -334,6 +347,7 @@ function StockScreener() {
     if (stocks.length > 0) {
       localStorage.setItem("stocksData", JSON.stringify(stocks));
       localStorage.setItem("stocksDataStrategy", selectedStrategy);
+      localStorage.setItem("stocksDataVersion", "v2.0.0"); // Set version when saving
     }
   }, [stocks, selectedStrategy]);
 
@@ -380,8 +394,16 @@ function StockScreener() {
       const savedStocks = localStorage.getItem("stocksData");
       const savedStrategy = localStorage.getItem("stocksDataStrategy");
 
-      if (savedStocks && savedStrategy === selectedStrategy) {
-        // Data already exists for this strategy, just update sort field
+      // Check for cache version to force refresh when backend changes
+      const cacheVersion = localStorage.getItem("stocksDataVersion");
+      const currentVersion = "v2.0.0"; // Increment this when backend changes
+
+      if (
+        savedStocks &&
+        savedStrategy === selectedStrategy &&
+        cacheVersion === currentVersion
+      ) {
+        // Data already exists for this strategy and version, just update sort field
         setSortField(`${selectedStrategy}_score` as SortField);
         setError("");
         return;
@@ -781,6 +803,14 @@ function StockScreener() {
             </div>
             <div className="flex items-center gap-4">
               <HealthIndicator showDetails={true} />
+              <button
+                onClick={forceRefresh}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors"
+                title="Refresh data from backend"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </button>
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 bg-green-500 rounded-full"></div>
                 <span className="text-xs text-muted-foreground">
