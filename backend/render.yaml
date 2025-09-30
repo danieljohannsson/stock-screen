@@ -10,3 +10,13 @@ services:
         value: 3.11.4
       - key: ENVIRONMENT
         value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stock-rec-db
+          property: connectionString
+
+  - type: pserv
+    name: stock-rec-db
+    plan: free # free tier, you can change to 'starter' or higher later
+    env: postgresql
+    region: oregon
