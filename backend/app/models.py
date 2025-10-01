@@ -17,6 +17,7 @@ class Stock(Base):
     dividend_yield = Column(Float)
     free_cash_flow = Column(Float)
     revenue_growth = Column(Float)
+    revenue_growth_3yr = Column(Float)
     earnings_growth = Column(Float)
     de_ratio = Column(Float)
     average_analyst_rating = Column(String(50))

@@ -2,6 +2,7 @@ import os
 import math
 from pathlib import Path
 import yfinance as yf
+import pandas as pd
 import json
 from datetime import datetime
 from dotenv import load_dotenv
@@ -110,20 +111,25 @@ def _calculate_growth_score(stock_data: Dict[str, Any], safe_float) -> int:
     """Growth investing strategy with binary pass/fail criteria"""
     score = 0.0
     
-    # Revenue Growth (33.3 points) - Must be ≥20%
+    # 3-Year Revenue Growth (25 points) - Must be >20%
+    revenue_growth_3yr = safe_float(stock_data.get('revenue_growth_3yr'))
+    if revenue_growth_3yr is not None and revenue_growth_3yr > 0.20:
+        score += 25
+    
+    # Revenue Growth YoY (25 points) - Must be ≥20%
     revenue_growth = safe_float(stock_data.get('revenue_growth'))
     if revenue_growth is not None and revenue_growth >= 0.20:
-        score += 33.3
+        score += 25
     
-    # D/E Ratio (33.3 points) - Must be between 0 and 5
+    # D/E Ratio (25 points) - Must be between 0 and 5
     de_ratio = safe_float(stock_data.get('de_ratio'))
     if de_ratio is not None and 0 <= de_ratio <= 5:
-        score += 33.3
+        score += 25
     
-    # PEG Ratio (33.3 points) - Must be between 0 and 2
+    # PEG Ratio (25 points) - Must be between 0 and 2
     peg_ratio = safe_float(stock_data.get('peg_ratio'))
     if peg_ratio is not None and 0 < peg_ratio <= 2:
-        score += 33.3
+        score += 25
     
     return min(100, int(math.ceil(score)))
 
@@ -131,20 +137,30 @@ def _calculate_momentum_score(stock_data: Dict[str, Any], safe_float) -> int:
     """Momentum investing strategy with binary pass/fail criteria"""
     score = 0.0
     
-    # Earnings Growth (33.3 points) - Must be >15%
+    # 3-Year Revenue Growth (20 points) - Must be >10%
+    revenue_growth_3yr = safe_float(stock_data.get('revenue_growth_3yr'))
+    if revenue_growth_3yr is not None and revenue_growth_3yr > 0.10:
+        score += 20
+    
+    # Earnings Growth (20 points) - Must be >15%
     earnings_growth = safe_float(stock_data.get('earnings_growth'))
     if earnings_growth is not None and earnings_growth > 0.15:
-        score += 33.3
+        score += 20
     
-    # Revenue Growth (33.3 points) - Must be >10%
+    # Revenue Growth YoY (20 points) - Must be >20%
     revenue_growth = safe_float(stock_data.get('revenue_growth'))
-    if revenue_growth is not None and revenue_growth > 0.10:
-        score += 33.3
+    if revenue_growth is not None and revenue_growth > 0.20:
+        score += 20
     
-    # Return on Equity (33.3 points) - Must be >20%
+    # Return on Equity (20 points) - Must be >20%
     roe = safe_float(stock_data.get('roe'))
     if roe is not None and roe > 0.20:
-        score += 33.3
+        score += 20
+    
+    # Accelerating Revenue Growth (20 points) - YoY growth must be higher than 3-year growth
+    if (revenue_growth is not None and revenue_growth_3yr is not None and 
+        revenue_growth > revenue_growth_3yr):
+        score += 20
     
     return min(100, int(math.ceil(score)))
 
@@ -190,6 +206,48 @@ def fetch_info(ticker: str):
     except Exception as e:
         print(f"Error fetching quote for {ticker}: {e}")
         return {}
+
+def calculate_3yr_revenue_growth(ticker: str) -> float:
+    """
+    Calculate 3-year annualized revenue growth rate from historical financial data.
+    Returns the annualized growth rate as a decimal (e.g., 0.15 for 15%).
+    """
+    try:
+        yf_ticker = yf.Ticker(ticker)
+        financials = yf_ticker.financials
+        
+        if 'Total Revenue' not in financials.index:
+            return None
+            
+        revenue_data = financials.loc['Total Revenue']
+        
+        # Need at least 2 years of data to calculate growth
+        if len(revenue_data) < 2:
+            return None
+            
+        # For 3-year growth, we want the most recent 4 years of data
+        # Take the first 4 years if available, otherwise use all available data
+        years_to_use = min(4, len(revenue_data))
+        recent_data = revenue_data.iloc[:years_to_use]
+        
+        # Get the most recent and oldest revenue data from our selection
+        latest_revenue = recent_data.iloc[0]  # Most recent
+        oldest_revenue = recent_data.iloc[-1]  # Oldest in our selection
+        
+        # Check for valid data
+        if latest_revenue <= 0 or oldest_revenue <= 0:
+            return None
+            
+        # Calculate annualized growth rate
+        years = len(recent_data) - 1
+        annualized_growth = ((latest_revenue / oldest_revenue) ** (1/years)) - 1
+        
+        # Convert numpy types to Python float to avoid database issues
+        return float(annualized_growth) if not pd.isna(annualized_growth) else None
+        
+    except Exception as e:
+        print(f"Error calculating 3-year revenue growth for {ticker}: {e}")
+        return None
 
 def get_tickers_from_json() -> List[str]:
     """Load tickers from the existing JSON file"""
@@ -271,6 +329,9 @@ def get_stocks():
             info = fetch_info(symbol)
             print(f"Fetched info for {symbol}")
             
+            # Calculate 3-year revenue growth
+            revenue_growth_3yr = calculate_3yr_revenue_growth(symbol)
+            
             metrics = {
                 "name": info.get("shortName") if info.get("shortName") else info.get("displayName"),
                 "price": info.get("currentPrice"),
@@ -282,6 +343,7 @@ def get_stocks():
                 "dividend_yield": info.get("dividendYield"),
                 "free_cash_flow": info.get("freeCashflow"),
                 "revenue_growth": info.get("revenueGrowth"),
+                "revenue_growth_3yr": revenue_growth_3yr,
                 "earnings_growth": info.get("earningsGrowth"),
                 "de_ratio": info.get("debtToEquity") / 100 if info.get("debtToEquity") else None,
                 "average_analyst_rating": info.get("averageAnalystRating").split(" - ")[1] if info.get("averageAnalystRating") else None,
@@ -341,6 +403,7 @@ def get_stocks_from_db(db: Session, limit: int = 100, strategy: str = "balanced"
             "dividend_yield": stock.dividend_yield,
             "free_cash_flow": stock.free_cash_flow,
             "revenue_growth": stock.revenue_growth,
+            "revenue_growth_3yr": stock.revenue_growth_3yr,
             "earnings_growth": stock.earnings_growth,
             "de_ratio": stock.de_ratio,
             "average_analyst_rating": stock.average_analyst_rating,
