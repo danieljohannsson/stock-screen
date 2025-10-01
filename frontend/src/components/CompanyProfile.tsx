@@ -20,6 +20,7 @@ interface Stock {
   peg_ratio: number;
   dividend_yield?: number;
   revenue_growth: number;
+  revenue_growth_3yr?: number;
   earnings_growth: number;
   de_ratio: number;
   roe?: number;
@@ -205,6 +206,29 @@ function CompanyProfile({ stock }: CompanyProfileProps) {
               >
                 {stock.revenue_growth
                   ? (stock.revenue_growth * 100).toFixed(1) + "%"
+                  : "--"}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Revenue Growth (3yr)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`text-2xl font-bold ${
+                  stock.revenue_growth_3yr && stock.revenue_growth_3yr > 0
+                    ? "text-green-600"
+                    : stock.revenue_growth_3yr && stock.revenue_growth_3yr < 0
+                    ? "text-red-600"
+                    : "text-foreground"
+                }`}
+              >
+                {stock.revenue_growth_3yr
+                  ? (stock.revenue_growth_3yr * 100).toFixed(1) + "%"
                   : "--"}
               </div>
             </CardContent>

@@ -45,6 +45,7 @@ interface Stock {
   peg_ratio: number;
   dividend_yield?: number;
   revenue_growth: number;
+  revenue_growth_3yr?: number;
   earnings_growth: number;
   de_ratio: number;
   roe?: number;
@@ -141,19 +142,24 @@ function getStrategyCriteria(strategy: string) {
       color: "purple",
       metrics: [
         {
-          name: "Revenue Growth",
-          maxPoints: 33.3,
-          thresholds: "≥20%: Pass (33.3pts) | <20%: Fail (0pts)",
+          name: "3-Year Revenue Growth",
+          maxPoints: 25,
+          thresholds: ">20%: Pass (25pts) | ≤20%: Fail (0pts)",
+        },
+        {
+          name: "Revenue Growth (YoY)",
+          maxPoints: 25,
+          thresholds: "≥20%: Pass (25pts) | <20%: Fail (0pts)",
         },
         {
           name: "D/E Ratio",
-          maxPoints: 33.3,
-          thresholds: "0-5: Pass (33.3pts) | Outside range: Fail (0pts)",
+          maxPoints: 25,
+          thresholds: "0-5: Pass (25pts) | Outside range: Fail (0pts)",
         },
         {
           name: "PEG Ratio",
-          maxPoints: 33.3,
-          thresholds: "0-2: Pass (33.3pts) | Outside range: Fail (0pts)",
+          maxPoints: 25,
+          thresholds: "0-2: Pass (25pts) | Outside range: Fail (0pts)",
         },
       ],
     },
@@ -163,19 +169,29 @@ function getStrategyCriteria(strategy: string) {
       color: "orange",
       metrics: [
         {
-          name: "Earnings Growth",
-          maxPoints: 33.3,
-          thresholds: ">15%: Pass (33.3pts) | ≤15%: Fail (0pts)",
+          name: "3-Year Revenue Growth",
+          maxPoints: 20,
+          thresholds: ">10%: Pass (20pts) | ≤10%: Fail (0pts)",
         },
         {
-          name: "Revenue Growth",
-          maxPoints: 33.3,
-          thresholds: ">10%: Pass (33.3pts) | ≤10%: Fail (0pts)",
+          name: "Earnings Growth",
+          maxPoints: 20,
+          thresholds: ">15%: Pass (20pts) | ≤15%: Fail (0pts)",
+        },
+        {
+          name: "Revenue Growth (YoY)",
+          maxPoints: 20,
+          thresholds: ">20%: Pass (20pts) | ≤20%: Fail (0pts)",
         },
         {
           name: "Return on Equity",
-          maxPoints: 33.3,
-          thresholds: ">20%: Pass (33.3pts) | ≤20%: Fail (0pts)",
+          maxPoints: 20,
+          thresholds: ">20%: Pass (20pts) | ≤20%: Fail (0pts)",
+        },
+        {
+          name: "Accelerating Revenue Growth",
+          maxPoints: 20,
+          thresholds: "YoY > 3yr: Pass (20pts) | YoY ≤ 3yr: Fail (0pts)",
         },
       ],
     },
@@ -557,6 +573,11 @@ function StockScreener() {
             icon: <TrendingUp className="h-4 w-4" />,
           },
           {
+            key: "revenue_growth_3yr",
+            label: "Revenue Growth (3yr)",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
             key: "de_ratio",
             label: "D/E Ratio",
             icon: <Building2 className="h-4 w-4" />,
@@ -617,6 +638,11 @@ function StockScreener() {
           {
             key: "revenue_growth",
             label: "Revenue Growth (yoy)",
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            key: "revenue_growth_3yr",
+            label: "Revenue Growth (3yr)",
             icon: <TrendingUp className="h-4 w-4" />,
           },
           {
@@ -760,6 +786,22 @@ function StockScreener() {
           >
             {stock.revenue_growth
               ? (stock.revenue_growth * 100).toFixed(1) + "%"
+              : "--"}
+          </span>
+        );
+      case "revenue_growth_3yr":
+        return (
+          <span
+            className={`font-semibold ${
+              stock.revenue_growth_3yr && stock.revenue_growth_3yr > 0
+                ? "text-green-600"
+                : stock.revenue_growth_3yr && stock.revenue_growth_3yr < 0
+                ? "text-red-600"
+                : "text-black"
+            }`}
+          >
+            {stock.revenue_growth_3yr
+              ? (stock.revenue_growth_3yr * 100).toFixed(1) + "%"
               : "--"}
           </span>
         );
