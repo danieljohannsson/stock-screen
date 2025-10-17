@@ -15,6 +15,22 @@ load_dotenv()
 
 BATCH_SIZE = 30
 
+def safe_json_value(value):
+    """
+    Convert a value to be JSON-safe by handling infinite values and NaN.
+    Returns None for inf, -inf, and NaN values.
+    """
+    if value is None:
+        return None
+    
+    # Handle numeric values
+    if isinstance(value, (int, float)):
+        if math.isinf(value) or math.isnan(value):
+            return None
+        return value
+    
+    return value
+
 def calculate_stock_score(stock_data: Dict[str, Any], strategy: str = "balanced") -> int:
     """
     Calculate a comprehensive score for a stock based on the selected strategy.
@@ -279,18 +295,23 @@ def get_or_create_progress(db: Session) -> TickerProgress:
 
 def save_stock_to_db(db: Session, symbol: str, metrics: Dict[str, Any]):
     """Save or update stock data in the database"""
+    # Clean metrics to remove infinite values before saving
+    clean_metrics = {}
+    for key, value in metrics.items():
+        clean_metrics[key] = safe_json_value(value)
+    
     # Check if stock already exists
     existing_stock = db.query(Stock).filter(Stock.symbol == symbol).first()
     
     if existing_stock:
         # Update existing stock
-        for key, value in metrics.items():
+        for key, value in clean_metrics.items():
             if hasattr(existing_stock, key):
                 setattr(existing_stock, key, value)
         existing_stock.last_fetched = datetime.utcnow()
     else:
         # Create new stock
-        stock = Stock(symbol=symbol, **metrics)
+        stock = Stock(symbol=symbol, **clean_metrics)
         db.add(stock)
     
     db.commit()
@@ -332,6 +353,16 @@ def get_stocks():
             # Calculate 3-year revenue growth
             revenue_growth_3yr = calculate_3yr_revenue_growth(symbol)
             
+            # Safe division for debt-to-equity ratio
+            de_ratio = None
+            if info.get("debtToEquity") is not None:
+                try:
+                    de_ratio = info.get("debtToEquity") / 100
+                    if math.isinf(de_ratio) or math.isnan(de_ratio):
+                        de_ratio = None
+                except (ZeroDivisionError, TypeError):
+                    de_ratio = None
+            
             metrics = {
                 "name": info.get("shortName") if info.get("shortName") else info.get("displayName"),
                 "price": info.get("currentPrice"),
@@ -345,7 +376,7 @@ def get_stocks():
                 "revenue_growth": info.get("revenueGrowth"),
                 "revenue_growth_3yr": revenue_growth_3yr,
                 "earnings_growth": info.get("earningsGrowth"),
-                "de_ratio": info.get("debtToEquity") / 100 if info.get("debtToEquity") else None,
+                "de_ratio": de_ratio,
                 "average_analyst_rating": info.get("averageAnalystRating").split(" - ")[1] if info.get("averageAnalystRating") else None,
                 "summary": info.get("longBusinessSummary"),
                 "industry": info.get("industry"),
@@ -394,28 +425,28 @@ def get_stocks_from_db(db: Session, limit: int = 100, strategy: str = "balanced"
         stock_dict = {
             "symbol": stock.symbol,
             "name": stock.name,
-            "price": stock.price,
-            "pe_ratio": stock.pe_ratio,
-            "ps_ratio": stock.ps_ratio,
-            "pb_ratio": stock.pb_ratio,
-            "peg_ratio": stock.peg_ratio,
-            "roe": stock.roe,
-            "dividend_yield": stock.dividend_yield,
-            "free_cash_flow": stock.free_cash_flow,
-            "revenue_growth": stock.revenue_growth,
-            "revenue_growth_3yr": stock.revenue_growth_3yr,
-            "earnings_growth": stock.earnings_growth,
-            "de_ratio": stock.de_ratio,
+            "price": safe_json_value(stock.price),
+            "pe_ratio": safe_json_value(stock.pe_ratio),
+            "ps_ratio": safe_json_value(stock.ps_ratio),
+            "pb_ratio": safe_json_value(stock.pb_ratio),
+            "peg_ratio": safe_json_value(stock.peg_ratio),
+            "roe": safe_json_value(stock.roe),
+            "dividend_yield": safe_json_value(stock.dividend_yield),
+            "free_cash_flow": safe_json_value(stock.free_cash_flow),
+            "revenue_growth": safe_json_value(stock.revenue_growth),
+            "revenue_growth_3yr": safe_json_value(stock.revenue_growth_3yr),
+            "earnings_growth": safe_json_value(stock.earnings_growth),
+            "de_ratio": safe_json_value(stock.de_ratio),
             "average_analyst_rating": stock.average_analyst_rating,
             "summary": stock.summary,
             "industry": stock.industry,
             "website": stock.website,
             "last_fetched": stock.last_fetched.isoformat() if stock.last_fetched else None,
-            "balanced_score": stock.balanced_score,
-            "value_score": stock.value_score,
-            "growth_score": stock.growth_score,
-            "momentum_score": stock.momentum_score,
-            "quality_score": stock.quality_score,
+            "balanced_score": safe_json_value(stock.balanced_score),
+            "value_score": safe_json_value(stock.value_score),
+            "growth_score": safe_json_value(stock.growth_score),
+            "momentum_score": safe_json_value(stock.momentum_score),
+            "quality_score": safe_json_value(stock.quality_score),
         }
         result.append(stock_dict)
     
