@@ -5,7 +5,7 @@ import uvicorn
 from app.services.stock_fetcher import get_stocks
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import stocks, auth
+from app.routes import stocks
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.database import create_tables
 
@@ -40,7 +40,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(stocks.router)
-app.include_router(auth.router)
 
 @app.on_event("startup")
 def start_scheduler():
